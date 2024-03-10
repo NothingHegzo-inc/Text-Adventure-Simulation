@@ -1,3 +1,3 @@
 
-from NTS_Module2.NTSModule import *
+from NTSModule import *
 
