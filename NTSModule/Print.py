@@ -9,25 +9,25 @@ import time
 @overload
 def Print() -> None: """Scroll to find out!"""
 @overload
-def Print(printText: str, **kwargs) -> None: """Normal print, can add normal print function keyword arguments."""
+def Print(*printText, **kwargs) -> None: """Normal print, can add normal print function keyword arguments."""
 @overload
-def Print(printText: str, animation: bool) -> None: """Print with animation option, set the second input variable to true."""
+def Print(*printText, animation: bool, **kwargs) -> None: """Print with animation option, set the second input variable to true."""
 @overload
-def Print(printText: str, animation: bool, animationDelay: int | float) -> None: """Adding a delay option. Can manually change the delay between each letter printed in the animation."""
+def Print(*printText, animation: bool, animationDelay: int | float, **kwargs) -> None: """Adding a delay option. Can manually change the delay between each letter printed in the animation."""
 def Print(
-        printText: str,
+        *printText,
         animation: bool = False,
         animationDelay: Optional[int | float] = None,
         **kwargs
 ) -> None:
     if animation is False:
-        print(printText, **kwargs)
+        print(*printText, **kwargs)
     elif animation is True:
         if 'end' in kwargs or 'flush' in kwargs:
             raise IncompatableArgsError(f"Variables '{CYAN}end{RESET}' or '{CYAN}flush{RESET}' cannot be given with variable '{CYAN}animation{RESET}' being {BLUE}True{RESET}.")
         else:
             if animationDelay is not None:
-                pythonType(printText, animationDelay, **kwargs)
+                pythonType(printText, delayAmount=animationDelay, **kwargs)
             elif animationDelay is None:
                 pythonType(printText, **kwargs)
     else:
@@ -42,6 +42,8 @@ def pythonType(
         delayAmount: float | int = 0.025,
         **kwargs
 ) -> None:
+    if type(text) is tuple or type(text) is list:
+        text = " ".join(text)
     for char in text:
         print(char, **kwargs, end='', flush=True)
         time.sleep(delayAmount)
@@ -49,5 +51,5 @@ def pythonType(
 
 
 if __name__ == '__main__':
-    Print("Hi")
-    Print(type(1))
+    Print("Hi" , "bye" + " potato", animation=True)
+    Print(type(1).__qualname__, animation=True)
