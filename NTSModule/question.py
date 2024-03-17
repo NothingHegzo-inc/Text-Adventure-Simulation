@@ -1,13 +1,9 @@
-import sys, os
-appendingSys: str = str(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(f"{appendingSys}")
-del appendingSys
+import os, sys, time, logging
+sys.path.append(os.path.dirname(__file__))
 from imports import *
-from clear import clear
 from Print import Print
+from clear import clear
 from invalidOption import invalidOption
-
-import time
 
 @overload
 def question(question: str, maxOptions: int) -> int: ...
@@ -32,7 +28,7 @@ def question(
         extraOptions: Optional[list[str] | dict[str , int]] = None,
         strict: bool = True,
         **kwargs
-) -> int | str:
+) -> int | str| Any:
     """
     Keyword arguments can be inputed for normal print function.
     Keywords are recommended to be used for this function. Otherwise the sequence of variables is, 
@@ -51,30 +47,36 @@ def question(
     # Checking correct variables have the correct type
     if extraOptions is not None:
             if type(extraOptions) is not list and type(extraOptions) is not dict:
+                logging.error(f"{IncorrectArgsError.__name__}")
                 raise IncorrectArgsError(f"Variable '{CYAN}extraOptions{RESET}' has to be type {DGREEN}list{PINK}[{DGREEN}str{PINK}]{RESET} or type {DGREEN}dict{PINK}[{DGREEN}str{RESET}, {DGREEN}int{PINK}]{RESET}. {BLACK}(even if there is one option){RESET}")
     if maxOptions is None and (type(extraOptions) is not list and type(extraOptions) is not dict):
+        logging.error(f"{IncompatableArgsError.__name__}")
         raise IncompatableArgsError(f"If variable '{CYAN}maxOptions{RESET}' is not given, then variable '{CYAN}extraOptions{RESET}' has to be a {DGREEN}list{PINK}[{DGREEN}str{PINK}]{RESET} or {DGREEN}dict{PINK}[{DGREEN}str{RESET}, {DGREEN}int{PINK}]{RESET} not a {RED}{type(extraOptions).__name__}{RESET}.")
     if animation is True and ('end' in kwargs or 'flush' in kwargs):
+        logging.error(f"{IncompatableArgsError.__name__}")
         raise IncompatableArgsError(f"Variables '{CYAN}end{RESET}' or '{CYAN}flush{RESET}' cannot be given with variable '{CYAN}animation{RESET}' being {BLUE}True{RESET}.")
     if strict:
         if type(extraOptions) is list:
             for option in extraOptions:
                 if type(option) is not str:
+                    logging.error(f"{IncorrectArgsError.__name__}")
                     raise IncorrectArgsError(f"Options in variable '{CYAN}extraOptions{RESET}' must be type {DGREEN}str{RESET} not {DGREEN}{type(option).__name__}{RESET}.")
                 else:
                     continue
         elif type(extraOptions) is dict:
             for option, output in extraOptions.items():
                 if type(option) is not str:
+                    logging.error(f"{IncorrectArgsError.__name__}")
                     raise IncorrectArgsError(f"Keys in dict '{CYAN}extraOptions{RESET}' must be type {DGREEN}str{RESET} not {DGREEN}{type(option).__name__}{RESET}.")
                 if type(output) is not int:
+                    logging.error(f"{IncorrectArgsError.__name__}")
                     raise IncorrectArgsError(f"Values in dict '{CYAN}extraOptions{RESET}' must be type {DGREEN}int{RESET} not {DGREEN}{type(option).__name__}{RESET}.")
     # Actual system
     if maxOptions is not None:
         while True:
             if startClear is True:
                 clear()
-            Print(question, animation, **kwargs)
+            Print(question, animation=animation, **kwargs)
             answer = input("> ")
             try:
                 answer = int(answer)
@@ -110,25 +112,43 @@ def question(
         while True:
             if startClear:
                 clear()
-            Print(question, animation, **kwargs)
+            Print(question, animation=animation, **kwargs)
             answer = input("> ")
             for option in extraOptions:
-                if answer.casefold() == option.casefold():
-                    return option
-                else:
-                    continue
+                try:
+                    if answer.casefold() == option.casefold():
+                        return option
+                    else:
+                        continue
+                except AttributeError:
+                    logging.info(f"{AttributeError.__name__} as should.")
+                    if type(option) is int:
+                        if int(answer) == option:
+                            return option
+                    else:
+                        logging.error(f"{IncompatableArgsError.__name__}")
+                        raise IncompatableArgsError(f"Variable '{CYAN}extraOptions{RESET}' has a {DGREEN}{type(option).__name__}{RESET} which is incompatable with this function.")
             invalidOption(answer=answer)
     elif maxOptions is None and type(extraOptions) is dict:
         while True:
             if startClear:
                 clear()
-            Print(question, animation, **kwargs)
+            Print(question, animation=animation, **kwargs)
             answer = input("> ")
             for option, output in extraOptions.items():
-                if answer.casefold() == str(option).casefold():
-                    return output
-                else:
-                    continue
+                try:
+                    if answer.casefold() == str(option).casefold():
+                        return output
+                    else:
+                        continue
+                except AttributeError:
+                    logging.info(f"{AttributeError.__name__} as should.")
+                    if type(option) is int:
+                        if int(answer) == option:
+                            return output
+                    else:
+                        logging.error(f"{IncompatableArgsError.__name__}")
+                        raise IncompatableArgsError(f"Variable '{CYAN}extraOptions{RESET}' has a {DGREEN}{type(option).__name__}{RESET} which is incompatable with this function.")
             invalidOption(answer=answer)
         
 
@@ -140,4 +160,4 @@ def question(
 
 
 if __name__ == '__main__':
-    Print(question("Test", extraOptions={"1" : 2, "2" : 1}))
+    Print(question("Test", extraOptions={"1" : 2, "2" : 1}, strict=False))
